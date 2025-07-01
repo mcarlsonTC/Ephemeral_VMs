@@ -2,45 +2,50 @@ provider "azurerm" {
   features {}
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
-  location = var.location
-}
-
-resource "azurerm_virtual_network" "vnet" {
-  name                = "vnet-${var.vm_name}"
-  address_space       = ["10.0.0.0/16"]
-  location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
-}
-
-resource "azurerm_subnet" "subnet" {
-  name                 = "subnet-${var.vm_name}"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.1.0/24"]
-}
-
-resource "azurerm_network_interface" "nic" {
-  name                = "nic-${var.vm_name}"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  ip_configuration {
-    name                          = "ipconfig-${var.vm_name}"
-    subnet_id                     = azurerm_subnet.subnet.id
-    private_ip_address_allocation = "Dynamic"
-  }
-}
-
+# custom image
 data "azurerm_image" "custom_image" {
   name                = var.image_name
   resource_group_name = var.image_resource_group
 }
 
+# Use existing virtual network
+data "azurerm_virtual_network" "vnet" {
+  name                = var.vnet_name
+  resource_group_name = var.resource_group_name
+}
+
+# Use existing subnet
+data "azurerm_subnet" "subnet" {
+  name                 = var.subnet_name
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
+  resource_group_name  = var.resource_group_name
+}
+
+# Use existing NSG
+data "azurerm_network_security_group" "nsg" {
+  name                = var.nsg_name
+  resource_group_name = var.resource_group_name
+}
+
+# Create a NIC, associate with NSG
+resource "azurerm_network_interface" "nic" {
+  name                = "nic-${var.vm_name}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  ip_configuration {
+    name                          = "ipconfig-${var.vm_name}"
+    subnet_id                     = data.azurerm_subnet.subnet.id
+    private_ip_address_allocation = "Dynamic"
+  }
+
+  network_security_group_id = data.azurerm_network_security_group.nsg.id
+}
+
+# Create ephemeral VM
 resource "azurerm_windows_virtual_machine" "vm" {
   name                  = var.vm_name
-  resource_group_name   = azurerm_resource_group.rg.name
+  resource_group_name   = var.resource_group_name
   location              = var.location
   size                  = var.vm_size
   admin_username        = var.admin_username
@@ -59,6 +64,6 @@ resource "azurerm_windows_virtual_machine" "vm" {
   }
 
   tags = {
-    environment = "sandbox"
+    environment = "ephemeral"
   }
 }

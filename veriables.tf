@@ -39,3 +39,18 @@ variable "admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "vnet_name" {
+  type        = string
+  description = "Name of existing VNet"
+}
+
+variable "subnet_name" {
+  type        = string
+  description = "Name of existing Subnet"
+}
+
+variable "nsg_name" {
+  type        = string
+  description = "Name of existing NSG"
+}
