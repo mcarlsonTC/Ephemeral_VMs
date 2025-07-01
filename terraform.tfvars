@@ -1,0 +1,7 @@
+location             = "eastus"
+resource_group_name  = "Ephemeral_VMs"
+image_name           = "Ephemeral_golden"
+image_resource_group = "Ephemeral_VMs"
+vm_name              = "TheSandbox"
+admin_username       = "Soteriadmin"
+admin_password       = "Soterian1234"
