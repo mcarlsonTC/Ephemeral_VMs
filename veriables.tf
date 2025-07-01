@@ -34,12 +34,6 @@ variable "admin_username" {
   type        = string
 }
 
-variable "admin_password" {
-  description = "Admin password for the VM"
-  type        = string
-  sensitive   = true
-}
-
 variable "vnet_name" {
   type        = string
   description = "Name of existing VNet"
